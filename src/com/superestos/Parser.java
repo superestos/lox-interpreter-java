@@ -16,10 +16,35 @@ public class Parser {
     List<Statement> parse() {
         List<Statement> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            statements.add(statement());
+            statements.add(declaration());
         }
 
         return statements;
+    }
+
+    private Statement declaration() {
+        try {
+            if (match(VAR)) {
+                return varDeclaration();
+            }
+
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    private Statement varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect variable name.");
+
+        Expression initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Statement.Var(name, initializer);
     }
 
     private Statement statement() {
@@ -79,7 +104,25 @@ public class Parser {
     }
 
     private Expression expression() {
-        return equality();
+        return assignment();
+    }
+
+    private Expression assignment() {
+        Expression expr = equality();
+
+        if (match(EQUAL)) {
+            Token equals = previous();
+            Expression value = assignment();
+
+            if (expr instanceof Expression.Variable) {
+                Token name = ((Expression.Variable)expr).name;
+                return new Expression.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expression equality() {
@@ -161,6 +204,10 @@ public class Parser {
             return new Expression.Grouping(expr);
         }
 
+        if (match(IDENTIFIER)) {
+            return new Expression.Variable(previous());
+        }
+
         throw error(peek(), "Expect expression,");
     }
 
@@ -168,6 +215,22 @@ public class Parser {
         if (check(type)) return advance();
 
         throw error(peek(), message);
+    }
+
+    private void synchronize() {
+        advance();
+
+        while (!isAtEnd()) {
+            if (previous().type == SEMICOLON) return;
+
+            switch (peek().type) {
+                case CLASS: case FUN: case VAR: case PRINT:
+                case FOR: case IF: case WHILE: case RETURN:
+                    return;
+            }
+
+            advance();
+        }
     }
 
     private ParseError error(Token token, String message) {

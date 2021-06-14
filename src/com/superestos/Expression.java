@@ -39,4 +39,22 @@ abstract class Expression {
 
         final Expression expression;
     }
+
+    static class Variable extends Expression {
+        Variable(Token name) {
+            this.name = name;
+        }
+
+        final Token name;
+    }
+
+    static class Assign extends Expression {
+        Assign(Token name, Expression value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        final Token name;
+        final Expression value;
+    }
 }

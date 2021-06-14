@@ -4,6 +4,8 @@ import java.util.List;
 
 public class Interpreter {
 
+    private Environment environment = new Environment();
+
     void interpret(List<Statement> statements) {
         try {
             for (Statement statement: statements) {
@@ -21,6 +23,15 @@ public class Interpreter {
 
     public void visitExprStatement(Statement.Expr stmt) {
         evaluate(stmt.expression);
+    }
+
+    public void visitVarStatement(Statement.Var stmt) {
+        Object value = null;
+        if (stmt.expression != null) {
+            value = evaluate(stmt.expression);
+        }
+
+        environment.define(stmt.name.lexeme, value);
     }
 
     public Object visitLiteralExpr(Expression.Literal expr) {
@@ -92,12 +103,25 @@ public class Interpreter {
         return null;
     }
 
+    public Object visitVariableExpr(Expression.Variable expr) {
+        return environment.get(expr.name);
+    }
+
+    public Object visitAssignExpr(Expression.Assign expr) {
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return value;
+    }
+
     private void execute(Statement stmt) {
         if (stmt instanceof Statement.Print) {
             visitPrintStatement((Statement.Print) stmt);
         }
         if (stmt instanceof Statement.Expr) {
             visitExprStatement((Statement.Expr) stmt);
+        }
+        if (stmt instanceof Statement.Var) {
+            visitVarStatement((Statement.Var) stmt);
         }
     }
 
@@ -113,6 +137,12 @@ public class Interpreter {
         }
         if (expr instanceof Expression.Literal) {
             return visitLiteralExpr((Expression.Literal)expr);
+        }
+        if (expr instanceof Expression.Variable) {
+            return visitVariableExpr((Expression.Variable)expr);
+        }
+        if (expr instanceof Expression.Assign) {
+            return visitAssignExpr((Expression.Assign)expr);
         }
         return null;
     }

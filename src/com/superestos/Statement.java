@@ -19,4 +19,13 @@ abstract class Statement {
             super(expression);
         }
     }
+
+    static class Var extends Statement {
+        Var(Token name, Expression initalizer) {
+            super(initalizer);
+            this.name = name;
+        }
+
+        final Token name;
+    }
 }

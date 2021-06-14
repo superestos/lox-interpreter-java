@@ -10,6 +10,8 @@ import java.util.List;
 
 public class Main {
 
+    private static Interpreter interpreter = new Interpreter();
+
     static boolean hadError = false;
     static boolean hadRuntimeError = false;
 
@@ -61,7 +63,6 @@ public class Main {
         Parser parser = new Parser(tokens);
         List<Statement> statements = parser.parse();
 
-        Interpreter interpreter = new Interpreter();
         interpreter.interpret(statements);
 
         /*
