@@ -21,6 +21,10 @@ public class Interpreter {
         System.out.println(stringify(value));
     }
 
+    public void visitBlockStatement(Statement.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+    }
+
     public void visitExprStatement(Statement.Expr stmt) {
         evaluate(stmt.expression);
     }
@@ -31,7 +35,7 @@ public class Interpreter {
             value = evaluate(stmt.expression);
         }
 
-        environment.define(stmt.name.lexeme, value);
+        environment.define(stmt.name, value);
     }
 
     public Object visitLiteralExpr(Expression.Literal expr) {
@@ -122,6 +126,22 @@ public class Interpreter {
         }
         if (stmt instanceof Statement.Var) {
             visitVarStatement((Statement.Var) stmt);
+        }
+        if (stmt instanceof Statement.Block) {
+            visitBlockStatement((Statement.Block) stmt);
+        }
+    }
+
+    private void executeBlock(List<Statement> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+
+            for (Statement statement: statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
         }
     }
 

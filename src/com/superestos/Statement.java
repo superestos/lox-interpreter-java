@@ -1,5 +1,7 @@
 package com.superestos;
 
+import java.util.List;
+
 abstract class Statement {
 
     final Expression expression;
@@ -27,5 +29,14 @@ abstract class Statement {
         }
 
         final Token name;
+    }
+
+    static class Block extends Statement {
+        Block(List<Statement> statements) {
+            super(null);
+            this.statements = statements;
+        }
+
+        final List<Statement> statements;
     }
 }
