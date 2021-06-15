@@ -1,5 +1,6 @@
 package com.superestos;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +61,9 @@ public class Parser {
         if (match(WHILE)) {
             return whileStatement();
         }
+        if (match(FOR)) {
+            return forStatement();
+        }
 
         return expressionStatement();
     }
@@ -102,6 +106,46 @@ public class Parser {
 
         Statement body = statement();
         return new Statement.While(condition, body);
+    }
+
+    private Statement forStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+        Statement initializer;
+        if (match(SEMICOLON)) {
+            initializer = null;
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+
+        Expression condition = null;
+        if (!check(SEMICOLON)) {
+            condition = expression();
+        }
+        consume(SEMICOLON, "Expect ';' after loop condition.");
+
+        Expression increment = null;
+        if (!check(RIGHT_PAREN)) {
+            increment = expression();
+        }
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        Statement body = statement();
+
+        if (increment != null) {
+            body = new Statement.Block(Arrays.asList(body, new Statement.Expr(increment)));
+        }
+        if (condition == null) {
+            condition = new Expression.Literal(true);
+        }
+        body = new Statement.While(condition, body);
+        if (initializer != null) {
+            body = new Statement.Block(Arrays.asList(initializer, body));
+        }
+
+        return body;
     }
 
     private Statement expressionStatement() {
