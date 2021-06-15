@@ -31,11 +31,19 @@ public class Interpreter {
 
     public void visitVarStatement(Statement.Var stmt) {
         Object value = null;
-        if (stmt.expression != null) {
-            value = evaluate(stmt.expression);
+        if (stmt.initializer != null) {
+            value = evaluate(stmt.initializer);
         }
 
         environment.define(stmt.name, value);
+    }
+
+    public void visitIfStatement(Statement.If stmt) {
+        if (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
     }
 
     public Object visitLiteralExpr(Expression.Literal expr) {
@@ -117,34 +125,6 @@ public class Interpreter {
         return value;
     }
 
-    private void execute(Statement stmt) {
-        if (stmt instanceof Statement.Print) {
-            visitPrintStatement((Statement.Print) stmt);
-        }
-        if (stmt instanceof Statement.Expr) {
-            visitExprStatement((Statement.Expr) stmt);
-        }
-        if (stmt instanceof Statement.Var) {
-            visitVarStatement((Statement.Var) stmt);
-        }
-        if (stmt instanceof Statement.Block) {
-            visitBlockStatement((Statement.Block) stmt);
-        }
-    }
-
-    private void executeBlock(List<Statement> statements, Environment environment) {
-        Environment previous = this.environment;
-        try {
-            this.environment = environment;
-
-            for (Statement statement: statements) {
-                execute(statement);
-            }
-        } finally {
-            this.environment = previous;
-        }
-    }
-
     private Object evaluate(Expression expr) {
         if (expr instanceof Expression.Binary) {
             return visitBinaryExpr((Expression.Binary) expr);
@@ -165,6 +145,37 @@ public class Interpreter {
             return visitAssignExpr((Expression.Assign)expr);
         }
         return null;
+    }
+
+    private void execute(Statement stmt) {
+        if (stmt instanceof Statement.Print) {
+            visitPrintStatement((Statement.Print) stmt);
+        }
+        if (stmt instanceof Statement.Expr) {
+            visitExprStatement((Statement.Expr) stmt);
+        }
+        if (stmt instanceof Statement.Var) {
+            visitVarStatement((Statement.Var) stmt);
+        }
+        if (stmt instanceof Statement.Block) {
+            visitBlockStatement((Statement.Block) stmt);
+        }
+        if (stmt instanceof Statement.If) {
+            visitIfStatement((Statement.If) stmt);
+        }
+    }
+
+    private void executeBlock(List<Statement> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+
+            for (Statement statement: statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 
     private boolean isEqual(Object a, Object b) {
