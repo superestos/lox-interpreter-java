@@ -1,5 +1,7 @@
 package com.superestos;
 
+import java.util.List;
+
 abstract class Expression {
 
     static class Binary extends Expression {
@@ -68,5 +70,17 @@ abstract class Expression {
         final Expression left;
         final Token operator;
         final Expression right;
+    }
+
+    static class Call extends Expression {
+        Call(Expression callee, List<Expression> arguments, Token paren) {
+            this.callee = callee;
+            this.arguments = arguments;
+            this.paren = paren;
+        }
+
+        final Expression callee;
+        final List<Expression> arguments;
+        final Token paren;
     }
 }

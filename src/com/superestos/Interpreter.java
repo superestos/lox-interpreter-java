@@ -1,10 +1,12 @@
 package com.superestos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter {
 
-    private Environment environment = new Environment();
+    final Environment globals = new Environment();
+    private Environment environment = globals;
 
     void interpret(List<Statement> statements) {
         try {
@@ -50,6 +52,11 @@ public class Interpreter {
         while (isTruthy(evaluate(stmt.condition))) {
             execute(stmt.body);
         }
+    }
+
+    public void visitFunctionStatement(Statement.Function stmt) {
+        Function function = new Function(stmt);
+        environment.define(stmt.name, function);
     }
 
     public Object visitLiteralExpr(Expression.Literal expr) {
@@ -146,6 +153,26 @@ public class Interpreter {
         return evaluate(expr.right);
     }
 
+    public Object visitCallExpr(Expression.Call expr) {
+        Object callee = evaluate(expr.callee);
+        List<Object> arguments = new ArrayList<>();
+        for (Expression argument: expr.arguments) {
+            arguments.add(evaluate(argument));
+        }
+
+        if (!(callee instanceof Callable)) {
+            throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+        }
+
+        Callable function = (Callable)callee;
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(expr.paren, "Expected " + function.arity() +
+                    " arguments but got " + arguments.size() + ".");
+        }
+
+        return function.call(this, arguments);
+    }
+
     private Object evaluate(Expression expr) {
         if (expr instanceof Expression.Binary) {
             return visitBinaryExpr((Expression.Binary) expr);
@@ -167,6 +194,9 @@ public class Interpreter {
         }
         if (expr instanceof Expression.Logical) {
             return visitLogicalExpr((Expression.Logical) expr);
+        }
+        if (expr instanceof Expression.Call) {
+            return visitCallExpr((Expression.Call) expr);
         }
         return null;
     }
@@ -190,9 +220,12 @@ public class Interpreter {
         if (stmt instanceof Statement.While) {
             visitWhileStatement((Statement.While) stmt);
         }
+        if (stmt instanceof Statement.Function) {
+            visitFunctionStatement((Statement.Function) stmt);
+        }
     }
 
-    private void executeBlock(List<Statement> statements, Environment environment) {
+    public void executeBlock(List<Statement> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;

@@ -28,6 +28,9 @@ public class Parser {
             if (match(VAR)) {
                 return varDeclaration();
             }
+            if (match(FUN)) {
+                return function("function");
+            }
 
             return statement();
         } catch (ParseError error) {
@@ -46,6 +49,23 @@ public class Parser {
 
         consume(SEMICOLON, "Expect ';' after variable declaration.");
         return new Statement.Var(name, initializer);
+    }
+
+    private Statement.Function function(String kind) {
+        Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
+
+        List<Token> parameters = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            do {
+                parameters.add(consume(IDENTIFIER, "Expect " + kind + " name"));
+            } while (match(COMMA));
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+        consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        List<Statement> body = block();
+        return new Statement.Function(name, parameters, body);
     }
 
     private Statement statement() {
@@ -154,42 +174,6 @@ public class Parser {
         return new Statement.Expr(expr);
     }
 
-    private boolean check(TokenType type) {
-        if (isAtEnd()) {
-            return false;
-        }
-
-        return peek().type == type;
-    }
-
-    private boolean match(TokenType... types) {
-        for (TokenType type: types) {
-            if (check(type)) {
-                advance();
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private Token advance() {
-        if (!isAtEnd()) current++;
-        return previous();
-    }
-
-    private boolean isAtEnd() {
-        return peek().type == EOF;
-    }
-
-    private Token peek() {
-        return tokens.get(current);
-    }
-
-    private Token previous() {
-        return tokens.get(current - 1);
-    }
-
     private Expression expression() {
         return assignment();
     }
@@ -291,7 +275,33 @@ public class Parser {
             return new Expression.Unary(operator, expr);
         }
 
-        return primary();
+        return call();
+    }
+
+    private Expression call() {
+        Expression expr = primary();
+
+        while (true) {
+            if (match(LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private Expression finishCall(Expression callee) {
+        List<Expression> arguments = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            do {
+                arguments.add(expression());
+            } while (match(COMMA));
+        }
+        Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
+
+        return new Expression.Call(callee, arguments, paren);
     }
 
     private Expression primary() {
@@ -320,6 +330,42 @@ public class Parser {
         }
 
         throw error(peek(), "Expect expression,");
+    }
+
+    private boolean check(TokenType type) {
+        if (isAtEnd()) {
+            return false;
+        }
+
+        return peek().type == type;
+    }
+
+    private boolean match(TokenType... types) {
+        for (TokenType type: types) {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Token advance() {
+        if (!isAtEnd()) current++;
+        return previous();
+    }
+
+    private boolean isAtEnd() {
+        return peek().type == EOF;
+    }
+
+    private Token peek() {
+        return tokens.get(current);
+    }
+
+    private Token previous() {
+        return tokens.get(current - 1);
     }
 
     private Token consume(TokenType type, String message) {

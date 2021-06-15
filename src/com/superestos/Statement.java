@@ -58,4 +58,16 @@ abstract class Statement {
         final Expression condition;
         final Statement body;
     }
+
+    static class Function extends Statement {
+        Function(Token name, List<Token> parameters, List<Statement> body) {
+            this.name = name;
+            this.parameters = parameters;
+            this.body = body;
+        }
+
+        final Token name;
+        final List<Token> parameters;
+        final List<Statement> body;
+    }
 }
