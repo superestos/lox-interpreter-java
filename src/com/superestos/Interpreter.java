@@ -125,24 +125,42 @@ public class Interpreter {
         return value;
     }
 
+    public Object visitLogicalExpr(Expression.Logical expr) {
+        Object left = evaluate(expr.left);
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left)) {
+                return left;
+            }
+        } else {
+            if (!isTruthy(left)) {
+                return left;
+            }
+        }
+
+        return evaluate(expr.right);
+    }
+
     private Object evaluate(Expression expr) {
         if (expr instanceof Expression.Binary) {
             return visitBinaryExpr((Expression.Binary) expr);
         }
         if (expr instanceof Expression.Unary) {
-            return visitUnaryExpr((Expression.Unary)expr);
+            return visitUnaryExpr((Expression.Unary) expr);
         }
         if (expr instanceof Expression.Grouping) {
-            return visitGroupingExpr((Expression.Grouping)expr);
+            return visitGroupingExpr((Expression.Grouping) expr);
         }
         if (expr instanceof Expression.Literal) {
-            return visitLiteralExpr((Expression.Literal)expr);
+            return visitLiteralExpr((Expression.Literal) expr);
         }
         if (expr instanceof Expression.Variable) {
-            return visitVariableExpr((Expression.Variable)expr);
+            return visitVariableExpr((Expression.Variable) expr);
         }
         if (expr instanceof Expression.Assign) {
-            return visitAssignExpr((Expression.Assign)expr);
+            return visitAssignExpr((Expression.Assign) expr);
+        }
+        if (expr instanceof Expression.Logical) {
+            return visitLogicalExpr((Expression.Logical) expr);
         }
         return null;
     }

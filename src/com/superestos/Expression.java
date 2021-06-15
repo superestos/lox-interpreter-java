@@ -57,4 +57,16 @@ abstract class Expression {
         final Token name;
         final Expression value;
     }
+
+    static class Logical extends Expression {
+        Logical(Expression left, Token operator, Expression right) {
+            this.left = left;
+            this.operator = operator;
+            this.right = right;
+        }
+
+        final Expression left;
+        final Token operator;
+        final Expression right;
+    }
 }
