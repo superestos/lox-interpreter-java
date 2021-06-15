@@ -48,4 +48,14 @@ abstract class Statement {
         final Statement thenBranch;
         final Statement elseBranch;
     }
+
+    static class While extends Statement {
+        While(Expression condition, Statement body) {
+            this.condition = condition;
+            this.body = body;
+        }
+
+        final Expression condition;
+        final Statement body;
+    }
 }

@@ -46,6 +46,12 @@ public class Interpreter {
         }
     }
 
+    public void visitWhileStatement(Statement.While stmt) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
+    }
+
     public Object visitLiteralExpr(Expression.Literal expr) {
         return expr.value;
     }
@@ -180,6 +186,9 @@ public class Interpreter {
         }
         if (stmt instanceof Statement.If) {
             visitIfStatement((Statement.If) stmt);
+        }
+        if (stmt instanceof Statement.While) {
+            visitWhileStatement((Statement.While) stmt);
         }
     }
 

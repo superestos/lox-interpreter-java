@@ -57,6 +57,9 @@ public class Parser {
         if (match(IF)) {
             return ifStatement();
         }
+        if (match(WHILE)) {
+            return whileStatement();
+        }
 
         return expressionStatement();
     }
@@ -90,6 +93,15 @@ public class Parser {
         }
 
         return new Statement.If(condition, thenBranch, elseBranch);
+    }
+
+    private Statement whileStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'while'.");
+        Expression condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after if condition.");
+
+        Statement body = statement();
+        return new Statement.While(condition, body);
     }
 
     private Statement expressionStatement() {
