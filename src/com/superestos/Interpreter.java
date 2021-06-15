@@ -59,6 +59,15 @@ public class Interpreter {
         environment.define(stmt.name, function);
     }
 
+    public void visitReturnStatement(Statement.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) {
+            value = evaluate(stmt.value);
+        }
+
+        throw new Return(value);
+    }
+
     public Object visitLiteralExpr(Expression.Literal expr) {
         return expr.value;
     }
@@ -223,6 +232,9 @@ public class Interpreter {
         if (stmt instanceof Statement.Function) {
             visitFunctionStatement((Statement.Function) stmt);
         }
+        if (stmt instanceof Statement.Return) {
+            visitReturnStatement((Statement.Return) stmt);
+        }
     }
 
     public void executeBlock(List<Statement> statements, Environment environment) {
@@ -289,6 +301,15 @@ public class Interpreter {
         RuntimeError(Token token, String message) {
             super(message);
             this.token = token;
+        }
+    }
+
+    static class Return extends RuntimeException {
+        final Object value;
+
+        Return(Object value) {
+            super(null, null, false, false);
+            this.value = value;
         }
     }
 }

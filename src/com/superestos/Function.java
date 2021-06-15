@@ -16,7 +16,11 @@ public class Function implements Callable {
             environment.define(declaration.parameters.get(i), arguments.get(i));
         }
 
-        interpreter.executeBlock(declaration.body, environment);
+        try {
+            interpreter.executeBlock(declaration.body, environment);
+        } catch (Interpreter.Return returnValue) {
+            return returnValue.value;
+        }
         return null;
     }
 

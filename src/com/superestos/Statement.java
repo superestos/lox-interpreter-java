@@ -70,4 +70,14 @@ abstract class Statement {
         final List<Token> parameters;
         final List<Statement> body;
     }
+
+    static class Return extends Statement {
+        Return(Token keyword, Expression value) {
+            this.keyword = keyword;
+            this.value = value;
+        }
+
+        final Token keyword;
+        final Expression value;
+    }
 }

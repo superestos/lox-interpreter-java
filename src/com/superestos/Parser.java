@@ -84,6 +84,9 @@ public class Parser {
         if (match(FOR)) {
             return forStatement();
         }
+        if (match(RETURN)) {
+            return returnStatement();
+        }
 
         return expressionStatement();
     }
@@ -166,6 +169,17 @@ public class Parser {
         }
 
         return body;
+    }
+
+    private Statement returnStatement() {
+        Token keyword = previous();
+        Expression value = null;
+        if (!check(SEMICOLON)) {
+            value = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after return value.");
+        return new Statement.Return(keyword, value);
     }
 
     private Statement expressionStatement() {
